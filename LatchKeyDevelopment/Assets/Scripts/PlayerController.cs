@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
 
 	public GameObject shield;
 
+    public GameObject enemy;
+
 	private Animator playerAnim;
 
 	public bool shieldDeployed;
@@ -215,13 +217,26 @@ public class PlayerController : MonoBehaviour
 		if (col.gameObject.layer == 9) {
 			Kill();
 		}
+        else if (col.gameObject.tag == "Enemy")
+        {
+            Kill();
+        }
 		else if (col.gameObject.layer == 11) {
 			NextScene();
 		}
 	}
 
-	// Kill the player and reload the level.
-	void Kill(){
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject == enemy)
+        {
+            Kill();
+        }
+
+    }
+
+    // Kill the player and reload the level.
+    void Kill(){
 		transform.position = startPosition;
 		//Destroy(GameObject.Find ("projectile"));
 		Destroy (this.gameObject);
@@ -232,10 +247,7 @@ public class PlayerController : MonoBehaviour
 	// Note: this is just a hack.
 	// Obviously we need to work out our scene transistions more thoroughly.
 	void NextScene(){
-		if (currentScene == 0) {
-			currentScene += 1;
-		} else {
-			SceneManager.LoadScene (1);
-		}
-	}
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+
+    }
 }
