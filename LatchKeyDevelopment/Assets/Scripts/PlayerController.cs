@@ -33,6 +33,8 @@ public class PlayerController : MonoBehaviour
 
 	public bool canBlock;
 
+    public bool isBlocking;
+
 	// The current scene.
 	private int currentScene;
 
@@ -131,7 +133,9 @@ public class PlayerController : MonoBehaviour
 				
 			canBlock = false;
 
-		}
+            isBlocking = false;
+
+        }
 
 
 		// Setting up the Roll button behavior
@@ -186,6 +190,8 @@ public class PlayerController : MonoBehaviour
 		rBody.velocity = currentDirection * 12;
 
 		shieldDeployed = true;
+
+        isBlocking = false;
 	}
 
 	// This doesn't really do anything for now because there are
@@ -193,6 +199,7 @@ public class PlayerController : MonoBehaviour
 	void ShieldBlock ()
 	{
 		playerAnim.SetBool ("isBlocking", true);
+        isBlocking = true;
 	}
 
 	// Enables shield blocking and throwing once the shield is returned.
@@ -214,14 +221,16 @@ public class PlayerController : MonoBehaviour
 	}
 
 	void OnTriggerStay2D(Collider2D col){
-		if (col.gameObject.layer == 9) {
-			Kill();
+		if (col.gameObject.layer == 9) {    //Hazard or Lava
+            if(!isRolling)
+			    Kill();
 		}
-        else if (col.gameObject.tag == "Enemy")
+        else if (col.gameObject.layer == 13)    //Enemy
         {
-            Kill();
+            if(!isBlocking)
+                Kill();
         }
-		else if (col.gameObject.layer == 11) {
+		else if (col.gameObject.layer == 11) {  //Rift
 			NextScene();
 		}
 	}
@@ -230,7 +239,12 @@ public class PlayerController : MonoBehaviour
     {
         if (col.gameObject == enemy)
         {
-            Kill();
+            //Kill();
+        }
+        else if (col.gameObject.layer == 13)    //Enemy
+        {
+            if (!isBlocking)
+                Kill();
         }
 
     }
