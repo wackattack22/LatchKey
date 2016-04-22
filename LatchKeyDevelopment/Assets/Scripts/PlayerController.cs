@@ -21,9 +21,11 @@ public class PlayerController : MonoBehaviour
 
 	public GameObject shield;
 
-    public GameObject enemy;
+	public GameObject enemy;
 
-	private Animator playerAnim;
+    public GameObject projectile;
+
+    private Animator playerAnim;
 
 	public bool shieldDeployed;
 
@@ -33,7 +35,15 @@ public class PlayerController : MonoBehaviour
 
 	public bool canBlock;
 
-    public bool isBlocking;
+	public bool isBlocking;
+
+    public static int lifeCount = 3;
+
+    public static int lvlScore;
+
+    private static int totalScore = 0;
+
+    public static float time = 0;
 
 	// The current scene.
 	private int currentScene;
@@ -41,11 +51,14 @@ public class PlayerController : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
+
+        lvlScore = 0;
+
 		// Just in case.
 		name = "Player";
 
 		// Sets the currentScene index to the actual current scene.
-		currentScene = SceneManager.GetActiveScene().buildIndex;
+		currentScene = SceneManager.GetActiveScene ().buildIndex;
 
 		playerAnim = GetComponent<Animator> ();
 
@@ -61,8 +74,12 @@ public class PlayerController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
-		if (!isRolling) {
+        time += Time.deltaTime;
+
+        if (!isRolling) {
 			playerMovement = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
+
+			DefinePlayerDirection (currentDirection);
 
 			if (Input.GetAxisRaw ("Horizontal") != 0 || Input.GetAxisRaw ("Vertical") != 0) {
 
@@ -92,6 +109,7 @@ public class PlayerController : MonoBehaviour
 					currentDirection = new Vector2 (1, -1); // currentDirection == DownRight
 				}
 			
+				//DefinePlayerDirection (currentDirection);
 			} else {
 
 				playerAnim.SetBool ("isWalking", false);
@@ -125,7 +143,17 @@ public class PlayerController : MonoBehaviour
 
 			shieldController = GameObject.Find ("projectile").GetComponent<ShieldController> ();
 
-			} else {
+            if (Input.GetButtonUp("Shield"))
+            {
+                //Kills shield on second button press
+
+                //Comment line below back in for warping
+                //transform.position = projectile.transform.position;
+                ShieldReturn();
+            }
+
+
+        } else {
 				
 			playerAnim.SetBool ("canBlock", false);
 				
@@ -133,9 +161,9 @@ public class PlayerController : MonoBehaviour
 				
 			canBlock = false;
 
-            isBlocking = false;
+			isBlocking = false;
 
-        }
+		}
 
 
 		// Setting up the Roll button behavior
@@ -179,7 +207,7 @@ public class PlayerController : MonoBehaviour
 
 		playerAnim.SetBool ("canBlock", false);
 
-		GameObject projectile = Instantiate (shield) as GameObject;
+		projectile = Instantiate (shield) as GameObject;
 
 		projectile.name = "projectile";
 
@@ -191,7 +219,7 @@ public class PlayerController : MonoBehaviour
 
 		shieldDeployed = true;
 
-        isBlocking = false;
+		isBlocking = false;
 	}
 
 	// This doesn't really do anything for now because there are
@@ -199,7 +227,7 @@ public class PlayerController : MonoBehaviour
 	void ShieldBlock ()
 	{
 		playerAnim.SetBool ("isBlocking", true);
-        isBlocking = true;
+		isBlocking = true;
 	}
 
 	// Enables shield blocking and throwing once the shield is returned.
@@ -218,50 +246,72 @@ public class PlayerController : MonoBehaviour
 		canBlock = true;
 		playerAnim.SetBool ("canBlock", false);
 		playerAnim.SetBool ("isRolling", false);
-	}
+	}   
 
-	void OnTriggerStay2D(Collider2D col){
+	void OnTriggerStay2D (Collider2D col)
+	{
 		if (col.gameObject.layer == 9) {    //Hazard or Lava
-            if(!isRolling)
-			    Kill();
-		}
-        else if (col.gameObject.layer == 13)    //Enemy
-        {
-            if(!isBlocking)
-                Kill();
-        }
-		else if (col.gameObject.layer == 11) {  //Rift
-			NextScene();
+			if (!isRolling)
+				Kill ();
+		} else if (col.gameObject.layer == 13) {    //Enemy
+			if (!isBlocking)
+				Kill ();
+		} else if (col.gameObject.layer == 11) {  //Rift
+			NextScene ();
 		}
 	}
 
-    void OnCollisionEnter2D(Collision2D col)
-    {
-        if (col.gameObject == enemy)
-        {
-            //Kill();
-        }
-        else if (col.gameObject.layer == 13)    //Enemy
-        {
-            if (!isBlocking)
-                Kill();
-        }
+	void OnCollisionEnter2D (Collision2D col)
+	{
+		if (col.gameObject == enemy) {
+			//Kill();
+		} else if (col.gameObject.layer == 13) {    //Enemy
+			if (!isBlocking)
+				Kill ();
+		}
 
-    }
+	}
 
-    // Kill the player and reload the level.
-    void Kill(){
+	// Kill the player and reload the level.
+	void Kill ()
+	{
 		transform.position = startPosition;
-		//Destroy(GameObject.Find ("projectile"));
-		Destroy (this.gameObject);
-		SceneManager.LoadScene(currentScene);
-	}
+        //Destroy(GameObject.Find ("projectile"));
+        lifeCount--;
+        Destroy (this.gameObject);
+
+		//float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
+		//yield return new WaitForSeconds (fadeTime);
+
+        if (lifeCount > 0)
+            SceneManager.LoadScene (currentScene);
+        else     //Game Over
+        {
+            lifeCount = 3;
+            time = 0;
+            totalScore = 0;
+            //Game Over screen?
+            SceneManager.LoadScene(0);
+        }
+            
+    }
 
 	// Advance to the next level.
 	// Note: this is just a hack.
 	// Obviously we need to work out our scene transistions more thoroughly.
-	void NextScene(){
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+	void NextScene ()
+	{
+        //float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
+        //yield return new WaitForSeconds (fadeTime);
 
-    }
+        //Screen for displaying total score?
+        totalScore += (lvlScore - (int) time);
+
+        Debug.Log("totalScore = "+totalScore);
+        Debug.Log("lvlTime = " + time);
+
+        time = 0;
+        SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex + 1);
+
+	}
 }
