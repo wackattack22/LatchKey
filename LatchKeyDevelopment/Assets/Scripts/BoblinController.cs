@@ -11,6 +11,8 @@ public class BoblinController : MonoBehaviour {
 
     private bool colliding;
 
+    private static GameObject[] LavaList;
+
 
     void Start () {
         //Random direction
@@ -20,6 +22,8 @@ public class BoblinController : MonoBehaviour {
 
         //Random time to move in direction
         time = Random.Range(3f, 6f);
+
+        LavaList = GameObject.FindGameObjectsWithTag("Lava");
 
     }
 	
@@ -32,7 +36,8 @@ public class BoblinController : MonoBehaviour {
             dir = new Vector2(-x, -y);
             colliding = false;
         }
-        
+      
+    
         //Time is up, new random direction and interval
         if (time <= 0)
         {
@@ -55,6 +60,10 @@ public class BoblinController : MonoBehaviour {
         {
             colliding = true;
         }
+        else if (col.gameObject.tag == "Lava")
+        {
+            colliding = true;
+        }
         else if (col.gameObject.layer == 13)    //enemy
         {
             colliding = true;
@@ -69,6 +78,14 @@ public class BoblinController : MonoBehaviour {
         {
             PlayerController.lvlScore += 10;
             Kill();
+        }       
+    }
+
+    void OnTriggerStay2D(Collider2D col)
+    {
+        if (col.gameObject.layer == 9) //hazard
+        {
+            colliding = true; 
         }
     }
 

@@ -41,9 +41,11 @@ public class PlayerController : MonoBehaviour
 
     public static int lvlScore;
 
-    private static int totalScore = 0;
+    public static int totalScore = 0;
 
     public static float time = 0;
+
+    public static bool lvlComplete;
 
 	// The current scene.
 	private int currentScene;
@@ -51,8 +53,10 @@ public class PlayerController : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
+        time = 0;
 
         lvlScore = 0;
+        lvlComplete = false;
 
 		// Just in case.
 		name = "Player";
@@ -73,8 +77,9 @@ public class PlayerController : MonoBehaviour
 	
 	// Update is called once per frame
 	void Update ()
-	{
-        time += Time.deltaTime;
+	{   
+        if(!lvlComplete)
+            time += Time.deltaTime;
 
         if (!isRolling) {
 			playerMovement = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
@@ -222,8 +227,7 @@ public class PlayerController : MonoBehaviour
 		isBlocking = false;
 	}
 
-	// This doesn't really do anything for now because there are
-	// no blockable hazards (such as arrows) or enemies.
+	
 	void ShieldBlock ()
 	{
 		playerAnim.SetBool ("isBlocking", true);
@@ -251,7 +255,9 @@ public class PlayerController : MonoBehaviour
 	void OnTriggerStay2D (Collider2D col)
 	{
 		if (col.gameObject.layer == 9) {    //Hazard or Lava
-			if (!isRolling)
+			if (col.gameObject.tag == "Slider")       //Sliders always kill
+                Kill();
+            else if (!isRolling)    //Can roll over other hazards
 				Kill ();
 		} else if (col.gameObject.layer == 13) {    //Enemy
 			if (!isBlocking)
@@ -295,6 +301,18 @@ public class PlayerController : MonoBehaviour
         }
             
     }
+    
+    //Calculates total score for level
+    void ScoreLvl()
+    {
+        lvlScore -= (int)time;
+
+        if (lvlScore < 0)
+            lvlScore = 0;
+
+        Score.lvlScores[currentScene] = lvlScore;
+        totalScore += lvlScore;
+    }
 
 	// Advance to the next level.
 	// Note: this is just a hack.
@@ -304,13 +322,12 @@ public class PlayerController : MonoBehaviour
         //float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
         //yield return new WaitForSeconds (fadeTime);
 
-        //Screen for displaying total score?
-        totalScore += (lvlScore - (int) time);
 
-        Debug.Log("totalScore = "+totalScore);
-        Debug.Log("lvlTime = " + time);
+        if(!lvlComplete)
+            ScoreLvl();
 
-        time = 0;
+        lvlComplete = true;
+
         SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex + 1);
 
 	}

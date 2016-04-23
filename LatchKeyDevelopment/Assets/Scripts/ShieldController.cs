@@ -44,7 +44,7 @@ public class ShieldController : MonoBehaviour
 
 			if (col.gameObject.layer == 8 || col.gameObject.layer == 13) {
 				--hitCounter;
-			} else if (col.gameObject.tag == "Hazard") {
+			} else if (col.gameObject.tag == "Hazard" || col.gameObject.layer == 9) {
 				Kill ();
 			}
 			else if(col.gameObject == player){
@@ -55,7 +55,7 @@ public class ShieldController : MonoBehaviour
 	}
 
 	void OnTriggerEnter2D(Collider2D col){
-		if (col.gameObject.tag == "Hazard") {
+		if (col.gameObject.tag == "Hazard" || col.gameObject.tag == "Slider") {
 			Kill ();
 		}     
     }
