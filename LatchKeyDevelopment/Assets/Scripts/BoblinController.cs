@@ -3,49 +3,108 @@ using System.Collections;
 
 public class BoblinController : MonoBehaviour {
 
-    private Vector2 dir;
+	private Vector2 moveDir;
+	private int moveChoice;
 
     private float time;
-    private float x;
-    private float y;
 
     private bool colliding;
 
-    private static GameObject[] LavaList;
+	private Animator boblinAnim;
+
+	private bool isWalking;
+
+	//private static GameObject[] LavaList;
 
 
     void Start () {
         //Random direction
-        x = Random.Range(-1f, 1f);
-        y = Random.Range(-1f, 1f);
-        dir = new Vector2(x, y);
+
+		boblinAnim = GetComponent<Animator>();
+		moveChoice = Random.Range (-2, 2);
+
+		switch (moveChoice) 
+		{
+		case -1:
+			moveDir = Vector2.down;
+			break;
+		case 1:
+			moveDir = Vector2.up;
+			break;
+		case 2:
+			moveDir = Vector2.right;
+			break;
+		case -2:
+			moveDir = Vector2.left;
+			break;
+		case 0:
+			moveChoice = Random.Range (-2, 2);
+			break;
+		}
+
 
         //Random time to move in direction
-        time = Random.Range(3f, 6f);
+        time = Random.Range(1f, 3f);
 
-        LavaList = GameObject.FindGameObjectsWithTag("Lava");
+		//LavaList = GameObject.FindGameObjectsWithTag("Lava");
 
     }
 	
 	void Update () {
         time -= Time.deltaTime;
-        this.GetComponent<Rigidbody2D>().velocity = dir.normalized * 1f;
+        this.GetComponent<Rigidbody2D>().velocity = moveDir.normalized * 2f;
+		boblinAnim.SetInteger ("moveChoice", moveChoice);
+
+		switch (moveChoice) 
+		{
+		case -1:
+			moveDir = Vector2.down;
+			break;
+		case 1:
+			moveDir = Vector2.up;
+			break;
+		case 2:
+			moveDir = Vector2.right;
+			break;
+		case -2:
+			moveDir = Vector2.left;
+			break;
+		case 0:
+			moveChoice = Random.Range (-2, 2);
+			break;
+		}
 
       if (colliding)    //Reverse direction
         {   
-            dir = new Vector2(-x, -y);
-            colliding = false;
+			moveChoice *= -1;
+			colliding = false;
         }
-      
-    
+        
         //Time is up, new random direction and interval
         if (time <= 0)
         {
-            x = Random.Range(-1f, 1f);
-            y = Random.Range(-1f, 1f);
-            dir = new Vector2(x, y);
+			moveChoice = Random.Range (-2, 2);
+            
+			switch (moveChoice) 
+			{
+			case -1:
+				moveDir = Vector2.down;
+				break;
+			case 1:
+				moveDir = Vector2.up;
+				break;
+			case 2:
+				moveDir = Vector2.right;
+				break;
+			case -2:
+				moveDir = Vector2.left;
+				break;
+			case 0:
+				moveChoice = Random.Range (-2, 2);
+				break;
+			}
 
-            time = Random.Range(3f, 6f);
+            time = Random.Range(1f, 3f);
         }
     }
 
@@ -60,10 +119,10 @@ public class BoblinController : MonoBehaviour {
         {
             colliding = true;
         }
-        else if (col.gameObject.tag == "Lava")
-        {
-            colliding = true;
-        }
+		else if (col.gameObject.tag == "Lava")
+		{
+			colliding = true;
+		}
         else if (col.gameObject.layer == 13)    //enemy
         {
             colliding = true;
@@ -78,16 +137,16 @@ public class BoblinController : MonoBehaviour {
         {
             PlayerController.lvlScore += 10;
             Kill();
-        }       
-    }
-
-    void OnTriggerStay2D(Collider2D col)
-    {
-        if (col.gameObject.layer == 9) //hazard
-        {
-            colliding = true; 
         }
     }
+
+	void OnTriggerEnter2D(Collider2D col)
+	{
+		if (col.gameObject.layer == 9) //hazard
+		{
+			colliding = true; 
+		}
+	}
 
     public void Kill()
     {

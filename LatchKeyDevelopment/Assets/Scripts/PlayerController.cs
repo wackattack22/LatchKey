@@ -23,9 +23,9 @@ public class PlayerController : MonoBehaviour
 
 	public GameObject enemy;
 
-    public GameObject projectile;
+	public GameObject projectile;
 
-    private Animator playerAnim;
+	private Animator playerAnim;
 
 	public bool shieldDeployed;
 
@@ -37,15 +37,17 @@ public class PlayerController : MonoBehaviour
 
 	public bool isBlocking;
 
-    public static int lifeCount = 3;
+	public bool isThrowing;
 
-    public static int lvlScore;
+	public static int lifeCount = 3;
 
-    public static int totalScore = 0;
+	public static int lvlScore;
 
-    public static float time = 0;
+	public static int totalScore = 0;
 
-    public static bool lvlComplete;
+	public static float time = 0;
+
+	public static bool lvlComplete;
 
 	// The current scene.
 	private int currentScene;
@@ -53,10 +55,10 @@ public class PlayerController : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
-        time = 0;
+		time = 0;
 
-        lvlScore = 0;
-        lvlComplete = false;
+		lvlScore = 0;
+		lvlComplete = false;
 
 		// Just in case.
 		name = "Player";
@@ -74,14 +76,14 @@ public class PlayerController : MonoBehaviour
 
 		startPosition = transform.position;
 	}
-	
+
 	// Update is called once per frame
 	void Update ()
 	{   
-        if(!lvlComplete)
-            time += Time.deltaTime;
+		if(!lvlComplete)
+			time += Time.deltaTime;
 
-        if (!isRolling) {
+		if (!isRolling && !isThrowing) {
 			playerMovement = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 
 			DefinePlayerDirection (currentDirection);
@@ -113,7 +115,7 @@ public class PlayerController : MonoBehaviour
 				} else if (Input.GetAxisRaw ("Horizontal") >= 0.1 && Input.GetAxisRaw ("Vertical") <= -0.1) {
 					currentDirection = new Vector2 (1, -1); // currentDirection == DownRight
 				}
-			
+
 				//DefinePlayerDirection (currentDirection);
 			} else {
 
@@ -124,46 +126,50 @@ public class PlayerController : MonoBehaviour
 		}
 
 		// Setting up the Shield button behavior
-		if (!shieldDeployed && !isRolling) {
+		if (!shieldDeployed && !isRolling && !isThrowing) {
 
 			playerAnim.SetBool ("canBlock", true);
 
 			canBlock = true;
 
-			if (Input.GetButton ("Shield") && canBlock) {
+			if (Input.GetButton ("Shield") && canBlock && GameObject.Find("projectile") == null) {
 				ShieldBlock ();
 			}
 
-			if (Input.GetButtonUp ("Shield") && !isRolling) {
-				ShieldThrow (currentDirection);		
+			if (Input.GetButtonUp ("Shield") && !isRolling && GameObject.Find("projectile") == null) {
+				ShieldThrow ();		
 			}
-			
+
 		} else if (shieldDeployed) {
 
 			playerAnim.SetBool ("canBlock", false);
 
 			playerAnim.SetBool ("isBlocking", false);
 
+			playerAnim.SetBool ("isThrowing", false);
+
+			isThrowing = false;
+
 			canBlock = false;
 
 			shieldController = GameObject.Find ("projectile").GetComponent<ShieldController> ();
 
-            if (Input.GetButtonUp("Shield"))
-            {
-                //Kills shield on second button press
+			if (Input.GetButtonUp("Shield"))
+			{
+				//Kills shield on second button press
 
-                //Comment line below back in for warping
-                //transform.position = projectile.transform.position;
-                ShieldReturn();
-            }
+				//Comment line below back in for warping
+				//transform.position = projectile.transform.position;
+				ShieldReturn();
+			}
 
 
-        } else {
-				
+		} else {
+
 			playerAnim.SetBool ("canBlock", false);
-				
+
 			playerAnim.SetBool ("isBlocking", false);
-				
+
 			canBlock = false;
 
 			isBlocking = false;
@@ -172,13 +178,17 @@ public class PlayerController : MonoBehaviour
 
 
 		// Setting up the Roll button behavior
-		if (!isRolling && isWalking) {
+		if (!isRolling && isWalking && !isThrowing) {
 
 			playerAnim.SetBool ("isRolling", false);
 
 			if (Input.GetButtonDown ("Roll")) {
 
 				isRolling = true;
+
+				isThrowing = false;
+
+				playerAnim.SetBool ("isThrowing", false);
 
 				playerAnim.SetBool ("isRolling", true);
 
@@ -191,10 +201,12 @@ public class PlayerController : MonoBehaviour
 
 	void FixedUpdate ()
 	{
-		if (!Input.GetButton ("Shield") || isRolling || shieldDeployed) {
+		if ((!Input.GetButton ("Shield") || isRolling || shieldDeployed) && !isThrowing) {
 			GetComponent<Rigidbody2D> ().MovePosition (GetComponent<Rigidbody2D> ().position + playerMovement * moveSpeed * Time.deltaTime);
 		} else if (isRolling) {
 			GetComponent<Rigidbody2D> ().MovePosition (GetComponent<Rigidbody2D> ().position * moveSpeed * Time.deltaTime);
+		} else if (isThrowing) {
+			GetComponent<Rigidbody2D> ().MovePosition (GetComponent<Rigidbody2D> ().position);
 		}
 	}
 
@@ -205,12 +217,19 @@ public class PlayerController : MonoBehaviour
 		playerAnim.SetFloat ("inputY", input.y);
 	}
 
-	// Handles shield projectile behavior.
-	void ShieldThrow (Vector2 currentDirection)
+	// Changes animation state to Throwing.
+	void ShieldThrow ()
 	{
-		this.currentDirection = currentDirection;
-
 		playerAnim.SetBool ("canBlock", false);
+		playerAnim.SetBool ("isThrowing", true);
+		isThrowing = true;
+	
+	}
+
+	// Handles shield projectile behavior.
+	void ShieldLaunch(){
+		//isThrowing = false;
+		//playerAnim.SetBool ("isThrowing", false);
 
 		projectile = Instantiate (shield) as GameObject;
 
@@ -227,7 +246,14 @@ public class PlayerController : MonoBehaviour
 		isBlocking = false;
 	}
 
-	
+	// Sets isThrowing to false after animation completes.
+	void ThrowingEnd(){
+		isThrowing = false;
+		playerAnim.SetBool ("isThrowing", false);
+		//isBlocking = false;
+	}
+
+
 	void ShieldBlock ()
 	{
 		playerAnim.SetBool ("isBlocking", true);
@@ -256,8 +282,8 @@ public class PlayerController : MonoBehaviour
 	{
 		if (col.gameObject.layer == 9) {    //Hazard or Lava
 			if (col.gameObject.tag == "Slider")       //Sliders always kill
-                Kill();
-            else if (!isRolling)    //Can roll over other hazards
+				Kill();
+			else if (!isRolling)    //Can roll over other hazards
 				Kill ();
 		} else if (col.gameObject.layer == 13) {    //Enemy
 			if (!isBlocking)
@@ -282,53 +308,81 @@ public class PlayerController : MonoBehaviour
 	void Kill ()
 	{
 		transform.position = startPosition;
-        //Destroy(GameObject.Find ("projectile"));
-        lifeCount--;
-        Destroy (this.gameObject);
+		//Destroy(GameObject.Find ("projectile"));
+		lifeCount--;
+		Destroy (this.gameObject);
 
 		//float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
 		//yield return new WaitForSeconds (fadeTime);
 
-        if (lifeCount > 0)
-            SceneManager.LoadScene (currentScene);
-        else     //Game Over
-        {
-            lifeCount = 3;
-            time = 0;
-            totalScore = 0;
-            //Game Over screen?
-            SceneManager.LoadScene(0);
-        }
-            
-    }
-    
-    //Calculates total score for level
-    void ScoreLvl()
-    {
-        lvlScore -= (int)time;
+		if (lifeCount > 0)
+			SceneManager.LoadScene (currentScene);
+		else     //Game Over
+		{
+			lifeCount = 3;
+			time = 0;
+			totalScore = 0;
+			//Game Over screen?
+			SceneManager.LoadScene(0);
+		}
 
-        if (lvlScore < 0)
-            lvlScore = 0;
+	}
 
-        Score.lvlScores[currentScene] = lvlScore;
-        totalScore += lvlScore;
-    }
+	// Uncomment below for infinite lives.
+	/*void Kill ()
+	{
+		transform.position = startPosition;
+		//Destroy(GameObject.Find ("projectile"));
+		//lifeCount--;
+		Destroy (this.gameObject);
+
+		//float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
+		//yield return new WaitForSeconds (fadeTime);
+
+		if (lifeCount > 0)
+			SceneManager.LoadScene (currentScene);
+		else     //Game Over
+		{
+			lifeCount = 3;
+			time = 0;
+			totalScore = 0;
+			//Game Over screen?
+			SceneManager.LoadScene(0);
+		}
+
+	}*/
+
+	// Uncomment below and comment out the above Kill() for testing mode.
+	/*void Kill(){
+	}*/
+
+	//Calculates total score for level
+	void ScoreLvl()
+	{
+		lvlScore -= (int)time;
+
+		if (lvlScore < 0)
+			lvlScore = 0;
+
+		Score.lvlScores[currentScene] = lvlScore;
+		totalScore += lvlScore;
+	}
 
 	// Advance to the next level.
 	// Note: this is just a hack.
 	// Obviously we need to work out our scene transistions more thoroughly.
 	void NextScene ()
 	{
-        //float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
-        //yield return new WaitForSeconds (fadeTime);
+		//float fadeTime = GetComponent<SceneFade> ().BeginFade (1);
+		//yield return new WaitForSeconds (fadeTime);
 
 
-        if(!lvlComplete)
-            ScoreLvl();
+		if(!lvlComplete)
+			ScoreLvl();
 
-        lvlComplete = true;
+		lvlComplete = true;
 
-        SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex + 1);
+		SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex + 1);
 
 	}
 }

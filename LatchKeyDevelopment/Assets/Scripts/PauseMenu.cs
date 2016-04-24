@@ -11,7 +11,7 @@ public class PauseMenu : MonoBehaviour
 
     public Color statColor;
 
-    public string[] credits;
+	public string[] credits = { "Team Dungeon Masters" , "Team Lead:\tAaron Tolbert" , "Team Members:\tJoshua Agnes, Leo Wack," , "\t\tPaul Ross, Ryan Bonisch" };
 
     public enum Page
     {
@@ -31,10 +31,6 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1;
         statColor = Color.white;
         startTime = 0.1f;
-        credits[0] = "Team Dungeon Masters";
-        credits[1] = "Team Lead:\tAaron Tolbert";
-        credits[2] = "Team Members:\tJoshua Agnes, Leo Wack,";
-        credits[3] = "\t\tPaul Ross, Ryan Bonisch";
         toolbarInt = 0;
         currentStyle = null;
     }
@@ -117,7 +113,7 @@ public class PauseMenu : MonoBehaviour
         BeginPage(300, 300);
         foreach (string credit in credits)
         {
-            GUILayout.Label(credit);
+			 GUILayout.Label(credit);
         }
         EndPage();
     }
