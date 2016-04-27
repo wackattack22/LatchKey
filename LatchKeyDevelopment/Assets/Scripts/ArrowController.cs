@@ -19,8 +19,11 @@ public class ArrowController : MonoBehaviour {
         playerPos = player.transform;
 
         dir = playerPos.position - transform.position;
+        Debug.Log(dir / dir.magnitude);
 
         playCont = player.GetComponent<PlayerController>();
+
+        
     }
 
     void FixedUpdate()
@@ -28,6 +31,7 @@ public class ArrowController : MonoBehaviour {
         //Projectile moves forward in a line at given speed
         this.GetComponent<Rigidbody2D>().velocity = dir.normalized * projectileSpeed;
         Physics2D.IgnoreCollision(enemy.GetComponent<Collider2D>(), GetComponent<Collider2D>());
+
     }
 
     void OnCollisionEnter2D(Collision2D col)

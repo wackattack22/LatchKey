@@ -21,6 +21,10 @@ public class LobsterProjectile : MonoBehaviour {
         dir = playerPos.position - transform.position;
         
         playCont = player.GetComponent<PlayerController>();
+
+        
+
+        
     }
 
     void FixedUpdate()

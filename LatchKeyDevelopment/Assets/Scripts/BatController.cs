@@ -25,7 +25,7 @@ public class BatController : MonoBehaviour {
         //Range at which enemy will chase player
         lineOfSight = 5;
         //Enemy chase speed
-        moveSpeed = 2f;
+        moveSpeed = 3.5f;
     }
 	
 	// Update is called once per frame

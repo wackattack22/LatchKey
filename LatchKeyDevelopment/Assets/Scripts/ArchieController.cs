@@ -24,6 +24,7 @@ public class ArchieController : MonoBehaviour
 
     private GameObject player;
 
+
     private float shotTimer;
 
 
@@ -39,6 +40,8 @@ public class ArchieController : MonoBehaviour
 
         boblinAnim = GetComponent<Animator>();
         moveChoice = Random.Range(-2, 2);
+
+        lineOfSight = 10f;
 
         switch (moveChoice)
         {
@@ -123,13 +126,17 @@ public class ArchieController : MonoBehaviour
 
             time = Random.Range(1f, 3f);
         }
-
-
-        if (Mathf.Floor(transform.localPosition.y) == Mathf.Floor(player.transform.localPosition.y) || Mathf.Floor(transform.localPosition.x) == Mathf.Floor(player.transform.localPosition.x))
+        if (Vector2.Distance(transform.position, player.transform.position) < lineOfSight)
         {
-            Shoot();
+            //if (Mathf.Floor(transform.localPosition.y) == Mathf.Floor(player.transform.localPosition.y) || Mathf.Floor(transform.localPosition.x) == Mathf.Floor(player.transform.localPosition.x))
+           // {
+                Shoot();
+                
+            //}
+            //else shotTimer = 0;
         }
-        else shotTimer = 0;
+
+        
     }
 
  
@@ -182,7 +189,7 @@ public class ArchieController : MonoBehaviour
             projectile.name = "Arrow";
             Physics2D.IgnoreCollision(projectile.GetComponent<Collider2D>(), GetComponent<Collider2D>());
             projectile.transform.position = transform.position;
-            shotTimer = 0.5f;
+            shotTimer = 3f;
         }
     }
 

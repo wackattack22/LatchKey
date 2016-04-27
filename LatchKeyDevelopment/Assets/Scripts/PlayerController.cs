@@ -39,7 +39,7 @@ public class PlayerController : MonoBehaviour
 
 	public bool isThrowing;
 
-	public static int lifeCount = 3;
+	public static int lifeCount = 300;
 
 	public static int lvlScore;
 
@@ -122,6 +122,7 @@ public class PlayerController : MonoBehaviour
 				playerAnim.SetBool ("isWalking", false);
 
 				isWalking = false;
+            
 			}
 		}
 
@@ -276,33 +277,49 @@ public class PlayerController : MonoBehaviour
 		canBlock = true;
 		playerAnim.SetBool ("canBlock", false);
 		playerAnim.SetBool ("isRolling", false);
-	}   
-
-	void OnTriggerStay2D (Collider2D col)
-	{
-		if (col.gameObject.layer == 9) {    //Hazard or Lava
-			if (col.gameObject.tag == "Slider")       //Sliders always kill
-				Kill();
-			else if (!isRolling)    //Can roll over other hazards
-				Kill ();
-		} else if (col.gameObject.layer == 13) {    //Enemy
-			if (!isBlocking)
-				Kill ();
-		} else if (col.gameObject.layer == 11) {  //Rift
-			NextScene ();
-		}
 	}
+
+    void OnTriggerStay2D(Collider2D col)
+    {
+        if (col.gameObject.layer == 9) {    //Hazard or Lava
+            if (col.gameObject.tag == "Slider")       //Sliders always kill
+                Kill();
+            else if (!isRolling)    //Can roll over other hazards
+                Kill();
+        } else if (col.gameObject.layer == 13) {    //Enemy
+            if (col.gameObject.tag == "Bat")
+            {
+                if (!isRolling)
+                    Kill();
+            }
+            else if (!isBlocking)
+                Kill();
+        } else if (col.gameObject.layer == 11) {  //Rift
+            NextScene();
+        }
+        else if (col.gameObject.layer == 14)    //Projectile
+        {
+            if (!isRolling)
+                Kill();
+        }
+
+    }
 
 	void OnCollisionEnter2D (Collision2D col)
 	{
 		if (col.gameObject == enemy) {
 			//Kill();
-		} else if (col.gameObject.layer == 13) {    //Enemy
+		} else if (col.gameObject.layer == 13) {    //Enemy  
 			if (!isBlocking)
 				Kill ();
 		}
+        else if (col.gameObject.layer == 14)    //Projectile
+        {
+            if (!isRolling)
+                Kill();
+        }
 
-	}
+    }
 
 	// Kill the player and reload the level.
 	void Kill ()
